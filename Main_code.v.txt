@@ -1,0 +1,60 @@
+module smart_vending_machine (
+    input clk,
+    input reset,
+    input [1:0] product_select,
+    input [3:0] payment,
+    output reg dispense,
+    output reg insufficient_payment,
+    output reg out_of_stock,
+    output reg [6:0] change
+);
+
+reg [6:0] price;
+reg [3:0] stock [0:3];
+
+always @(*) begin
+    case (product_select)
+        2'b00: price = 10;
+        2'b01: price = 20;
+        2'b10: price = 30;
+        2'b11: price = 40;
+        default: price = 10;
+    endcase
+end
+
+integer i;
+
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+        dispense <= 0;
+        insufficient_payment <= 0;
+        out_of_stock <= 0;
+        change <= 0;
+
+        stock[0] <= 5;
+        stock[1] <= 5;
+        stock[2] <= 5;
+        stock[3] <= 5;
+    end
+    else begin
+        dispense <= 0;
+        insufficient_payment <= 0;
+        out_of_stock <= 0;
+        change <= 0;
+
+        if (stock[product_select] == 0) begin
+            out_of_stock <= 1;
+        end
+        else if ((payment * 10) < price) begin
+            insufficient_payment <= 1;
+        end
+        else begin
+            dispense <= 1;
+            change <= (payment * 10) - price;
+            stock[product_select] <=
+                stock[product_select] - 1'b1;
+        end
+    end
+end
+
+endmodule
